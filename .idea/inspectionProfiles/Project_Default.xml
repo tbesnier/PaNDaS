@@ -1,0 +1,121 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="cudatoolkit" />
+          <option value="blas" />
+          <option value="brotli-python" />
+          <option value="cached-property" />
+          <option value="cuda-cudart" />
+          <option value="cuda-cupti" />
+          <option value="cuda-libraries" />
+          <option value="cuda-nvrtc" />
+          <option value="cuda-nvtx" />
+          <option value="cuda-runtime" />
+          <option value="entrypoints" />
+          <option value="ffmpeg" />
+          <option value="freetype" />
+          <option value="giflib" />
+          <option value="gmp" />
+          <option value="gmpy2" />
+          <option value="gnutls" />
+          <option value="importlib_resources" />
+          <option value="intel-openmp" />
+          <option value="ipython_genutils" />
+          <option value="jpeg" />
+          <option value="jsonschema-with-format-nongpl" />
+          <option value="lame" />
+          <option value="ld_impl_linux-64" />
+          <option value="libcublas" />
+          <option value="libcufft" />
+          <option value="libcufile" />
+          <option value="libcurand" />
+          <option value="libcusolver" />
+          <option value="libcusparse" />
+          <option value="libgcc-ng" />
+          <option value="libidn2" />
+          <option value="libnpp" />
+          <option value="libnvjpeg" />
+          <option value="libsodium" />
+          <option value="libstdcxx-ng" />
+          <option value="libtasn1" />
+          <option value="libunistring" />
+          <option value="libwebp" />
+          <option value="lz4-c" />
+          <option value="mkl-service" />
+          <option value="mkl_fft" />
+          <option value="mkl_random" />
+          <option value="mpc" />
+          <option value="mpfr" />
+          <option value="nbconvert-core" />
+          <option value="ncurses" />
+          <option value="nettle" />
+          <option value="nodejs" />
+          <option value="numpy-base" />
+          <option value="openh264" />
+          <option value="pickleshare" />
+          <option value="pkgutil-resolve-name" />
+          <option value="ptyprocess" />
+          <option value="pyopenssl" />
+          <option value="python-fastjsonschema" />
+          <option value="pytorch" />
+          <option value="pytorch-cuda" />
+          <option value="pytorch-mutex" />
+          <option value="pytz" />
+          <option value="readline" />
+          <option value="sniffio" />
+          <option value="tenacity" />
+          <option value="torchtriton" />
+          <option value="types-python-dateutil" />
+          <option value="typing_utils" />
+          <option value="zeromq" />
+          <option value="addict" />
+          <option value="ansi2html" />
+          <option value="dash-core-components" />
+          <option value="dash-html-components" />
+          <option value="dash-table" />
+          <option value="pandas" />
+          <option value="pexpect" />
+          <option value="pymcubes" />
+          <option value="lcms2" />
+          <option value="lerc" />
+          <option value="libdeflate" />
+          <option value="libgomp" />
+          <option value="libpng" />
+          <option value="libtiff" />
+          <option value="libuv" />
+          <option value="libwebp-base" />
+          <option value="mkl" />
+          <option value="ninja" />
+          <option value="ninja-base" />
+          <option value="tbb" />
+          <option value="zstd" />
+          <option value="dataclasses" />
+          <option value="freetype-py" />
+          <option value="future" />
+          <option value="importlib-metadata" />
+          <option value="multipledispatch" />
+          <option value="opencv-python" />
+          <option value="openmesh" />
+          <option value="psbody-mesh" />
+          <option value="pyopengl" />
+          <option value="pyrender" />
+          <option value="pyrr" />
+          <option value="pywavelets" />
+          <option value="pyzmq" />
+          <option value="zipp" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyStubPackagesAdvertiser" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="pandas" />
+          <option value="scipy" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
