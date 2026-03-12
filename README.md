@@ -1,6 +1,6 @@
 # PaNDaS: Learnable Shape Interpolation Modeling with Localized Control
 
-### [Paper](https://arxiv.org/abs/XXXX.XXXXX) | [Project Page](https://example.com/pandas) | [Video](https://example.com/pandas/video)
+### [Paper](https://arxiv.org/abs/2412.02306) | [Project Page](https://daidedou.sorpi.fr/publication/pandas) | [Video](https://example.com/pandas/video)
 
 > **PaNDaS: Learnable Shape Interpolation Modeling with Localized Control**  
 > Thomas Besnier, Emery Pierson, Sylvain Arguillère, Maks Ovsjanikov, Mohamed Daoudi  
@@ -32,7 +32,7 @@ conda activate PaNDaS
 pip install -r requirements.txt
 ```
 
-**Requirements**: PyTorch >= 2.0, [DiffusionNet](https://github.com/nmwsharp/diffusion-net), PyTorch3D (for Poisson solve). See `requirements.txt` for the full list.
+**Requirements**: PyTorch >= 2.0, [DiffusionNet](https://github.com/nmwsharp/diffusion-net), Neural Jacobian Fields.
 
 ---
 
@@ -76,6 +76,7 @@ python interpolate.py \
 ```
 
 ### Partial interpolation (with mask)
+For partial interpolations, the code requires an array of face indices. We provide examples in `data/` and they can be used with the following script:
 ```python
 python interpolate.py \
   --checkpoint checkpoints/mano.pth \
@@ -83,6 +84,11 @@ python interpolate.py \
   --target data/target.obj \
   --mask data/mask.npy \   # binary face mask, shape (num_faces,)
   --steps 10
+```
+
+To make your own mask, we provide an interactive viewer to manually select the mask and export the corresponding face indices as .npy in `data/custom_masks`. For this simply run:
+```python
+python select_mask.py --source data/source.obj
 ```
 
 ### Pose mixing
