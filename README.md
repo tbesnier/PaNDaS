@@ -1,6 +1,6 @@
 # PaNDaS: Learnable Shape Interpolation Modeling with Localized Control
 
-### [Paper](https://arxiv.org/abs/2412.02306) | [Project Page](https://daidedou.sorpi.fr/publication/pandas) | [Video](https://example.com/pandas/video)
+### [Paper](https://arxiv.org/abs/2412.02306) | [Project Page](https://daidedou.sorpi.fr/publication/pandas)
 
 > **PaNDaS: Learnable Shape Interpolation Modeling with Localized Control**  
 > Thomas Besnier, Emery Pierson, Sylvain Arguillère, Maks Ovsjanikov, Mohamed Daoudi  
@@ -29,10 +29,9 @@ git clone https://github.com/tbesnier/PaNDaS.git
 cd PaNDaS
 conda create -n PaNDaS python=3.10
 conda activate PaNDaS
-pip install -r requirements.txt
 ```
 
-**Requirements**: PyTorch >= 2.0, [DiffusionNet](https://github.com/nmwsharp/diffusion-net), Neural Jacobian Fields.
+**Requirements**: PyTorch >= 2.0, [DiffusionNet](https://github.com/nmwsharp/diffusion-net), [Neural Jacobian Fields](https://github.com/ThibaultGROUEIX/NeuralJacobianFields).
 
 ---
 
@@ -128,7 +127,8 @@ If you find this work useful, please cite:
 
 ## Acknowledgements
 
-This work was partially supported by the project **4DSHAPE ANR-24-CE23-5907** of the French National Research Agency (ANR). We build on [DiffusionNet](https://github.com/nmwsharp/diffusion-net) and [Neural Jacobian Fields](https://github.com/ThibaultGROUEIX/NeuralJacobianFields).
+This work was partially supported by the project **4DSHAPE ANR-24-CE23-5907** of the French National Research Agency (ANR). 
+This code is built on [DiffusionNet](https://github.com/nmwsharp/diffusion-net) and [Neural Jacobian Fields](https://github.com/ThibaultGROUEIX/NeuralJacobianFields).
 
 ---
 

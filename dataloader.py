@@ -209,7 +209,7 @@ def _load_template_and_targets(
 
             results.append(
                 {
-                    "name": tgt_path.name,
+                    "name": tgt_path.name[:-4],
                     "verts_src": temp,
                     "normals_src": normals_src,
                     "mass_src": mass_src,

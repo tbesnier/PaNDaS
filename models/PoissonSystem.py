@@ -361,24 +361,15 @@ class SPLUSolveLayer(torch.autograd.Function):
         #
         #     return res.type_as(b.type())
 
-        if USE_SCIPY:
+        b = b.double().contiguous()
+        c = b.permute(1, 2, 0).contiguous()
+        c = c.view(c.shape[0], -1)
+        x = torch.zeros_like(c)
+        solver.solve(c, x)
+        x = x.view(b.shape[1], b.shape[2], b.shape[0])
+        x = x.permute(2, 0, 1).contiguous()
 
-            assert (b.shape[0] == 1), "Need to code parrallel implem on the first dim"
-            sol = solver.solve(b[0].double().cpu().numpy())
-            res = torch.from_numpy(sol).to(b.device).reshape(b.shape)
-            return res.type_as(b).contiguous()
-
-        elif USE_CHOLESPY_GPU:
-
-            b = b.double().contiguous()
-            c = b.permute(1, 2, 0).contiguous()
-            c = c.view(c.shape[0], -1)
-            x = torch.zeros_like(c)
-            solver.solve(c, x)
-            x = x.view(b.shape[1], b.shape[2], b.shape[0])
-            x = x.permute(2, 0, 1).contiguous()
-
-            return x.contiguous()
+        return x.contiguous()
 
         # elif USE_CHOLESPY_CPU:
         #     assert (b.shape[0] == 1), "Need to code parrallel implem on the first dim"
