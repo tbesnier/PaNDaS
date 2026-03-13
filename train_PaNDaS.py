@@ -289,25 +289,25 @@ def main():
 
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
-    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--num_workers", type=int, default=0)
     parser.add_argument("--device", type=str, default=_default_device())
-    parser.add_argument("--eval_every", type=int, default=5)
+    parser.add_argument("--eval_every", type=int, default=20)
 
     parser.add_argument("--export_val_meshes", type=_str2bool, default=True)
     parser.add_argument("--export_test_meshes", type=_str2bool, default=True)
 
     # data args
     parser.add_argument('--template_file', type=str, default='./data/MANO/templates_aligned/01_01r.ply')
-    parser.add_argument('--templates_dir', type=str, default='./data/MANO/templates_small')
-    parser.add_argument('--targets_dir', type=str, default='../datasets/MANO_ALIGNED_0')
+    parser.add_argument('--templates_dir', type=str, default='./data/MANO/templates_aligned')
+    parser.add_argument('--targets_dir', type=str, default='D:/phd_data/MANO_ALIGNED')
     parser.add_argument('--train_subjects', type=str, default="01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18"
                                                               " 19 20 21 22 23 24 25 26 27 28 29 30 31"
                                                               " 32 33 34 35 36 37 38 39 40 41 42 43 44 45"
                                                               " 46 47")
-    parser.add_argument('--val_subjects', type=str, default="48 01")
-    parser.add_argument('--test_subjects', type=str, default="49 50 01")
+    parser.add_argument('--val_subjects', type=str, default="48")
+    parser.add_argument('--test_subjects', type=str, default="49 50")
     parser.add_argument('--results_path', type=str, default='../Data/PaNDaS/PaNDaS_MANO')
 
     # checkpoint args

@@ -8,6 +8,7 @@ import numpy as np
 import torch
 from torch.utils import data
 import trimesh
+from tqdm import tqdm
 
 from models.PoissonSystem import poisson_system_matrices_from_mesh
 
@@ -77,7 +78,7 @@ def find_matching_sequence_dirs(seqs_root: Path, template_key: str) -> List[Path
     seqs_root = seqs_root#ensure_dir(seqs_root, "deformations_dir")
     key = template_key.lower()
     print(key)
-    matches = [d for d in seqs_root.iterdir() if key in d.name.lower()]
+    matches = [d for d in seqs_root.iterdir() if d.name.lower().startswith(key)]
     return sorted(matches, key=lambda p: p.name.lower())
 
 
@@ -191,9 +192,10 @@ def _load_template_and_targets(
 
         subject_id = "_".join(template_name.split("_")[:1])
         matching_id = find_matching_sequence_dirs(targets_dir, subject_id)
+        L = len(matching_id)
 
         ### Iterate through targets
-        for tgt_path in matching_id:
+        for i, tgt_path in tqdm(enumerate(matching_id), total=L):
             mesh = trimesh.load(str(tgt_path), process=False)
             verts_tgt = np.asarray(mesh.vertices)
             faces_tgt = np.asarray(mesh.faces)

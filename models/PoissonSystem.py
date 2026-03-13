@@ -2,7 +2,6 @@ import numpy
 import igl
 import numpy as np
 import torch
-import time
 
 from scipy.sparse import diags, coo_matrix, identity
 from scipy.sparse import csc_matrix as sp_csc
@@ -10,38 +9,17 @@ from scipy.sparse import csc_matrix as sp_csc
 USE_TORCH_SPARSE = True  ## This uses TORCH_SPARSE instead of TORCH.SPARSE
 
 # This four are mutually exclusive
-USE_CUPY = False  ## This uses CUPY LU decomposition on GPU
 USE_CHOLESPY_GPU = True  ## This uses cholesky decomposition on GPU
-USE_CHOLESPY_CPU = False  ## This uses cholesky decomposition on CPU
-USE_SCIPY = False  ## This uses CUPY LU decomposition on CPU
 
 # If USE_SCIPY = True, wether or not to use enhanced backend
 USE_SCIKITS_UMFPACK = False  ## This uses UMFPACK backend for scipy instead of naive scipy.
 
-if USE_CHOLESPY_GPU or USE_CHOLESPY_CPU:
+if USE_CHOLESPY_GPU:
     from cholespy import CholeskySolverD, MatrixType
 
-if USE_CUPY and torch.cuda.is_available():
-    from cupyx.scipy.sparse.linalg import spsolve_triangular
-    from cupyx.scipy.sparse import csr_matrix
-    import cupy
-    from torch.utils.dlpack import to_dlpack, from_dlpack
-
-if USE_SCIPY:
-    if USE_SCIKITS_UMFPACK:
-        from scikits.umfpack import splu as scipy_splu
-    else:
-        import scipy.sparse.linalg as lg
-
-        lg.use_solver(useUmfpack=False)
-
-        from scipy.sparse.linalg import splu as scipy_splu
-        from scipy.sparse.linalg import spsolve_triangular, spsolve
 
 if USE_TORCH_SPARSE:
     import torch_sparse
-
-USE_UGLY_PATCH_FOR_CUPY_ERROR = False
 
 
 class SparseMat:
@@ -219,7 +197,7 @@ class PoissonSolver:
         self.W = self.W.to(device)
         self.sparse_grad = self.sparse_grad.to(device)
         self.sparse_rhs = self.sparse_rhs.to(device)
-        if USE_CUPY or USE_CHOLESPY_GPU:
+        if USE_CHOLESPY_GPU:
             self.lap = self.lap.to(device)
         return self
 
@@ -257,118 +235,8 @@ class PoissonSolver:
                                                                  jacobians.transpose(2, 3).reshape(jacobians.shape[0],
                                                                                                    -1, 3, 1).squeeze(
                                                                      3).contiguous())
-        #c = torch.mean(sol, axis=1).unsqueeze(1)  ## Beware the predicted mesh is centered here.
 
         return sol# - c
-
-
-def compute_finsler_laplace_beltrami(vertices, faces, b1, b2, b3, alpha=0.0, tau=0.0):
-    """
-    Compute the Finsler-Laplace-Beltrami operator using Randers metric.
-
-    Parameters:
-    - vertices: mesh vertices
-    - faces: mesh faces
-    - alpha: anisotropy parameter
-    - tau: parameter for the asymmetric component
-
-    Returns:
-    - FLBO: Finsler-Laplace-Beltrami operator
-    """
-    # First, compute the standard gradient operator
-    grad = igl.grad(vertices, faces)
-    # Compute double area
-    d_area = igl.doublearea(vertices, faces)
-    d_area = np.hstack((d_area, d_area, d_area))
-    mass = sp_csc(diags(d_area))
-
-    # Calculate face normals and principal directions
-    normals = b3
-
-    u_M, u_m, k1, k2 = igl.principal_curvature(vertices, faces)
-
-    u_M = igl.average_onto_faces(faces, u_M)
-    #u_m = igl.average_onto_faces(faces, u_m)
-
-    # Define the anisotropic Riemannian metric using eq. (35)
-    D_alpha = np.zeros((faces.shape[0], 2, 2))
-    D_alpha[:, 0, 0] = 1 / (1 + alpha)
-    D_alpha[:, 1, 1] = 1
-
-    # For each face, compute the shear matrix H_alpha_theta using eq. (36)
-    H = np.zeros((faces.shape[0], 3, 3))
-    M_inv = np.zeros((faces.shape[0], 3, 3))
-
-    for i in range(faces.shape[0]):
-        # Create local frame
-        frame = np.column_stack([b1[i], b2[i], normals[i]])
-
-        # Extend D_alpha to 3D
-        D3 = np.eye(3)
-        D3[0:2, 0:2] = D_alpha[i]
-
-        # Compute H_alpha_theta = frame @ D_alpha @ frame.T
-        H[i] = frame @ D3 @ frame.T
-
-        # M is inverse of H (eq. 37)
-        M_inv[i] = np.linalg.inv(H[i])
-
-    # Define the asymmetric component omega using eq. (38)
-    omega = tau * u_M
-
-    # Compute dual metric components
-    M_star = np.zeros_like(M_inv)
-    omega_star = np.zeros_like(omega)
-
-    for i in range(faces.shape[0]):
-        # Compute alpha_i = 1 - <omega, M^-1 omega>
-        omega_i = omega[i]
-
-        # When tau=0, omega_i is all zeros, so this gives alpha_i = 1
-        alpha_i = 1 - omega_i @ M_inv[i] @ omega_i
-        alpha_i = max(alpha_i, 1e-16)  # Safety check
-
-        # Compute M* using equation (22)
-        M_inv_omega = M_inv[i] @ omega_i
-
-        # When tau=0, M_inv_omega is zero, so this simplifies to M* = M^-1
-        M_star[i] = (1 / alpha_i ** 2) * (alpha_i * M_inv[i] + np.outer(M_inv_omega, M_inv_omega))
-
-        # Compute omega* using equation (23)
-        # When tau=0, this gives omega* = 0
-        omega_star[i] = -(1 / alpha_i) * M_inv[i] @ omega_i
-
-    # Compute Finsler diffusivity D_F* = M* - omega* omega*^T
-    D_F = np.zeros_like(M_star)
-    for i in range(faces.shape[0]):
-        # When tau=0, omega_star is zero, so D_F = M*
-        # When alpha=0 and tau=0, M* = M^-1 = identity
-        D_F[i] = M_star[i] - np.outer(omega_star[i], omega_star[i])
-
-    # Construct the diffusivity matrix
-    n = grad.shape[0]  # This should be 3 * number of faces
-
-    # Build a block diagonal matrix with D_F blocks - fixed indexing
-    rows, cols, data = [], [], []
-    for i in range(faces.shape[0]):
-        for di in range(3):
-            for dj in range(3):
-                # Correctly calculate the indices in the gradient space
-                row_idx = i * 3 + di
-                col_idx = i * 3 + dj
-
-                if row_idx < n and col_idx < n:
-                    rows.append(row_idx)
-                    cols.append(col_idx)
-                    # Use the diffusivity tensor for this face
-                    data.append(D_F[i, di, dj])
-
-    diffusivity = coo_matrix((data, (rows, cols)), shape=(n, n)).tocsc()
-
-    # Construct the Finsler-Laplace-Beltrami operator
-    FLBO = grad.T @ mass @ diffusivity @ grad
-
-    return FLBO, grad, mass, diffusivity
 
 
 def poisson_system_matrices_from_mesh(V, F, dim=3, ttype=torch.float64, is_sparse=True, cpuonly=False, L=None):
@@ -383,7 +251,7 @@ def poisson_system_matrices_from_mesh(V, F, dim=3, ttype=torch.float64, is_spars
     '''
 
     assert type(dim) == int and dim in [2, 3], f'Only two and three dimensional meshes are supported'
-    assert type(is_sparse) == bool
+    #assert type(is_sparse) == bool
     vertices = V
     faces = F
     is_sparse = is_sparse
@@ -464,17 +332,9 @@ class SPLUSolveLayer(torch.autograd.Function):
         # in our case M = A^{-1}, so the backprop is to solve x = A^-T g.
         # Because A is symmetric we simply solve A^{-1}g without transposing, but this will break if A is not symmetric.
         grad_output = grad_output.contiguous()
-        grad = SPLUSolveLayer.solve(ctx.solver,
-                                    grad_output)
+        grad = SPLUSolveLayer.solve(ctx.solver,grad_output)
         # At this point we perform a NAN check because the backsolve sometimes returns NaNs.
         assert not torch.isnan(grad).any(), "Nan in the backward pass of the POISSON SOLVE"
-
-        if USE_CUPY:
-            mempool = cupy.get_default_memory_pool()
-            pinned_mempool = cupy.get_default_pinned_memory_pool()
-            mempool.free_all_blocks()
-            pinned_mempool.free_all_blocks()
-            del ctx.lu
 
         return None, grad
 
@@ -487,21 +347,21 @@ class SPLUSolveLayer(torch.autograd.Function):
         :return: solution x which satisfies Ax = b where A is the poisson system lu describes
         '''
 
-        if USE_CUPY:
-            b_cupy = b #cupy.fromDlpack(to_dlpack(b))
-            with cupy.cuda.Device(solver.device()):
-                # this will hold the solution
-                sol = cupy.ndarray(b_cupy.shape)
-                for i in range(b_cupy.shape[2]):  # b may have multiple columns, solve for each one
-                    b2d = b_cupy[..., i]  # cupy.expand_dims(b_cpu[...,i],2)
-                    s = solver.solve(b2d.T).T
-                    sol[:, :, i] = s
-            # # # convert back to torch
-            res = from_dlpack(sol.toDlpack())
+        # if USE_CUPY:
+        #     b_cupy = b #cupy.fromDlpack(to_dlpack(b))
+        #     with cupy.cuda.Device(solver.device()):
+        #         # this will hold the solution
+        #         sol = cupy.ndarray(b_cupy.shape)
+        #         for i in range(b_cupy.shape[2]):  # b may have multiple columns, solve for each one
+        #             b2d = b_cupy[..., i]  # cupy.expand_dims(b_cpu[...,i],2)
+        #             s = solver.solve(b2d.T).T
+        #             sol[:, :, i] = s
+        #     # # # convert back to torch
+        #     res = from_dlpack(sol.toDlpack())
+        #
+        #     return res.type_as(b.type())
 
-            return res.type_as(b.type())
-
-        elif USE_SCIPY:
+        if USE_SCIPY:
 
             assert (b.shape[0] == 1), "Need to code parrallel implem on the first dim"
             sol = solver.solve(b[0].double().cpu().numpy())
@@ -520,13 +380,13 @@ class SPLUSolveLayer(torch.autograd.Function):
 
             return x.contiguous()
 
-        elif USE_CHOLESPY_CPU:
-            assert (b.shape[0] == 1), "Need to code parrallel implem on the first dim"
-            b = b.squeeze()
-            b_cpu = b.cpu()
-            x = torch.zeros_like(b_cpu)
-            solver.solve(b_cpu, x)
-            return x.contiguous().to(b.device).unsqueeze(0)
+        # elif USE_CHOLESPY_CPU:
+        #     assert (b.shape[0] == 1), "Need to code parrallel implem on the first dim"
+        #     b = b.squeeze()
+        #     b_cpu = b.cpu()
+        #     x = torch.zeros_like(b_cpu)
+        #     solver.solve(b_cpu, x)
+        #     return x.contiguous().to(b.device).unsqueeze(0)
 
 
 def _predicted_jacobians_to_vertices_via_poisson_solve(Lap, rhs, jacobians):
@@ -573,7 +433,7 @@ def _predicted_jacobians_to_vertices_via_poisson_solve(Lap, rhs, jacobians):
     out = SPLUSolveLayer.apply(Lap, input_to_solve)
 
     out = torch.cat([torch.zeros(out.shape[0], 1, out.shape[2]).type_as(out), out], dim=1)
-    out = out# - torch.mean(out, axis=1, keepdim=True) #center ??
+    out = out
 
     return out.type_as(jacobians)
 
@@ -587,108 +447,4 @@ def _multiply_sparse_2d_by_dense_3d(mat, B):
     return ret
 
 
-class MyCuSPLU:
-    '''
-    implmentation of SPLU on the gpu via CuPy
-    '''
 
-    def __init__(self, L, U, perm_c=None, perm_r=None):
-        self.__orgL = L
-        self.__orgU = U
-        self.L = None
-        self.U = None
-        self.perm_c = perm_c
-        self.perm_r = perm_r
-        self.__device = None
-
-    def to(self, device):
-        self.__device = device.index
-        with cupy.cuda.Device(self.__device):
-            self.L = csr_matrix(self.__orgL)
-            self.U = csr_matrix(self.__orgU)
-        return self
-
-    def device(self):
-        return self.__device
-
-    def solve(self, b):
-        """ an attempt to use SuperLU data to efficiently solve
-            Ax = Pr.T L U Pc.T x = b
-             - note that L from SuperLU is in CSC format solving for c
-               results in an efficiency warning
-            Pr . A . Pc = L . U
-            Lc = b      - forward solve for c
-             c = Ux     - then back solve for x
-        """
-
-        assert self.__device is not None, "need to explicitly call to() before solving"
-        if USE_UGLY_PATCH_FOR_CUPY_ERROR:
-            with cupy.cuda.Device(0):
-                b[:1, :1].copy()[:, :1]
-
-        with cupy.cuda.Device(self.__device):
-            b = cupy.array(b)
-            if self.perm_r is not None:
-                b_old = b.copy()
-                b[self.perm_r] = b_old
-
-        assert b.device.id == self.__device, "got device" + str(b.device.id) + "instead of" + str(self.__device)
-        try:  # unit_diagonal is a new kw
-            c = spsolve_triangular(self.L, b, lower=True, unit_diagonal=True, overwrite_b=True)
-        except TypeError:
-            c = spsolve_triangular(self.L, b, lower=True, overwrite_b=True)
-        px = spsolve_triangular(self.U, c, lower=False, overwrite_b=True)
-
-        if self.perm_c is None:
-            return px
-        px = px[self.perm_c]
-
-        return px
-
-
-class MyCuSPLU_CPU:
-    '''
-    implmentation of SPLU on the gpu via CuPy
-    '''
-
-    def __init__(self, L, U, perm_c=None, perm_r=None):
-        self.__orgL = L
-        self.__orgU = U
-        self.L = L
-        self.U = U
-        self.perm_c = perm_c
-        self.perm_r = perm_r
-        self.__device = 'cpu'
-
-    def device(self):
-        return self.__device
-
-    def solve(self, b):
-        """ an attempt to use SuperLU data to efficiently solve
-            Ax = Pr.T L U Pc.T x = b
-             - note that L from SuperLU is in CSC format solving for c
-               results in an efficiency warning
-            Pr . A . Pc = L . U
-            Lc = b      - forward solve for c
-             c = Ux     - then back solve for x
-        """
-
-        # Could be done on GPU
-        if self.perm_r is not None:
-            b_old = b.copy()
-            b[self.perm_r] = b_old
-
-        st = time.time()
-
-        try:  # unit_diagonal is a new kw
-            c = spsolve(self.L, b, permc_spec="NATURAL")
-        except TypeError:
-            c = spsolve(self.L, b, permc_spec="NATURAL")
-        px = spsolve(self.U, c, permc_spec="NATURAL")
-        print(f"time for spsolve_triangular CPU: {time.time() - st}")
-
-        if self.perm_c is None:
-            return px
-        px = px[self.perm_c]
-
-        return px
