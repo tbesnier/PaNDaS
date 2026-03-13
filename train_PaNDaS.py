@@ -13,6 +13,7 @@ import sys
 
 sys.path.append("models")
 sys.path.append("./")
+#sys.path.append("models/diffusion_net")
 from tqdm import tqdm
 
 from dataloader import get_dataloader
@@ -299,21 +300,20 @@ def main():
     parser.add_argument("--export_test_meshes", type=_str2bool, default=True)
 
     # data args
-    parser.add_argument('--template_file', type=str, default='./data/MANO/templates_aligned/01_01r.ply')
-    parser.add_argument('--templates_dir', type=str, default='./data/MANO/templates_aligned')
-    parser.add_argument('--targets_dir', type=str, default='D:/phd_data/MANO_ALIGNED')
-    parser.add_argument('--train_subjects', type=str, default="01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18"
-                                                              " 19 20 21 22 23 24 25 26 27 28 29 30 31"
-                                                              " 32 33 34 35 36 37 38 39 40 41 42 43 44 45"
-                                                              " 46 47")
-    parser.add_argument('--val_subjects', type=str, default="48")
+    parser.add_argument('--template_file', type=str, default='/media/bamf-big/thomas/data/datasets/MANO/templates_aligned/01_01r.ply')
+    parser.add_argument('--templates_dir', type=str, default='/media/bamf-big/thomas/data/datasets/MANO/templates_aligned')
+    parser.add_argument('--targets_dir', type=str, default='/media/bamf-big/thomas/data/datasets/MANO/MANO')
+    parser.add_argument('--train_subjects', type=str, default="01 04 06 09 10 13 15 17 18"
+                                                              " 24 25 26 27 28 29 30 31"
+                                                              " 32 33 34 35 36 37 38 39 40 41 42")
+    parser.add_argument('--val_subjects', type=str, default="43")
     parser.add_argument('--test_subjects', type=str, default="49 50")
-    parser.add_argument('--results_path', type=str, default='../Data/PaNDaS/PaNDaS_MANO')
+    parser.add_argument('--results_path', type=str, default='/media/bamf-big/thomas/data/results/PaNDaS/PaNDaS_MANO')
 
     # checkpoint args
     parser.add_argument('--load_model', type=_str2bool, default=False)
-    parser.add_argument('--models_dir', type=str, default='../Data/PaNDaS/Models')
-    parser.add_argument('--model_path', type=str, default='../Data/PaNDaS/Models/PaNDaS_MANO.pth.tar')
+    parser.add_argument('--models_dir', type=str, default='/media/bamf-big/thomas/data/results/PaNDaS/Models')
+    parser.add_argument('--model_path', type=str, default='/media/bamf-big/thomas/data/results/PaNDaS/Models/PaNDaS_MANO.pth.tar')
 
     # model hyperparameters
     parser.add_argument('--latent_channels', type=int, default=64)

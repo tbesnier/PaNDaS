@@ -9,6 +9,10 @@ import torch
 from torch.utils import data
 import trimesh
 from tqdm import tqdm
+import sys
+
+sys.path.append("./models")
+sys.path.append("./")
 
 from models.PoissonSystem import poisson_system_matrices_from_mesh
 
