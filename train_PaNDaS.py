@@ -261,7 +261,7 @@ def test(args):
         for _, sample in pbar:
             batch = _prepare_model_inputs(sample, args.device)
             vertices_pred = _forward_batch(model, batch)
-            loss_val = metric(vertices_pred, batch["vertices_target_seq"])
+            loss_val = metric(vertices_pred, batch["verts_tgt"])
             losses.append(float(loss_val.item()))
             pbar.set_description(f"TEST LOSS:{np.mean(losses):.10f}")
 
@@ -269,7 +269,7 @@ def test(args):
                 pred_dir = Path(args.results_path) / "Meshes_test" / "preds" / batch["name"]
                 tgt_dir = Path(args.results_path) / "Meshes_test" / "targets" / batch["name"]
                 _export_predicted_mesh(
-                    vertices_pred, batch["faces_src"], batch["vertices_tgt"],
+                    vertices_pred, batch["faces_src"], batch["verts_tgt"],
                     batch["faces_tgt"], pred_dir, tgt_dir, name=batch["name"]
                 )
 
@@ -331,7 +331,7 @@ def main():
 
     print(args.device)
 
-    train(args)
+    #train(args)
     test(args)
 
 
