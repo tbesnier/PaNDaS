@@ -127,7 +127,7 @@ If you find this work useful, please cite:
 
 ## Acknowledgements
 
-This work was partially supported by the project **4DSHAPE ANR-24-CE23-5907** of the French National Research Agency (ANR). 
+This work was partially supported by the project **4DSHAPE ANR-24-CE23-5907** of the French National Research Agency (ANR) and by the ERC Consolidator Grant 101087347 (VEGA).
 This code is built on [DiffusionNet](https://github.com/nmwsharp/diffusion-net) and [Neural Jacobian Fields](https://github.com/ThibaultGROUEIX/NeuralJacobianFields).
 
 ---
